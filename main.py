@@ -17,13 +17,27 @@ PITCH = (
 
 def main() -> None:
     text = PITCH.strip()
-    assert text, "pitch must not be blank"
-    assert len(text) <= 240, f"pitch is {len(text)} chars, over the 240 cap"
+    if not text:
+        raise SystemExit("error: pitch must not be blank")
+    if len(text) > 240:
+        raise SystemExit(
+            f"error: pitch is {len(text)} chars, over the 240-char cap"
+        )
+    if "\n" in text or "\r" in text:
+        raise SystemExit("error: pitch must be a single line")
     out_dir = os.environ.get("OUTPUT_DIR", "/output")
-    os.makedirs(out_dir, exist_ok=True)
     out_path = os.path.join(out_dir, "entry.txt")
-    with open(out_path, "w", encoding="utf-8") as f:
-        f.write(text)
+    try:
+        os.makedirs(out_dir, exist_ok=True)
+        with open(out_path, "w", encoding="utf-8") as f:
+            f.write(text)
+        with open(out_path, encoding="utf-8") as f:
+            if f.read() != text:
+                raise SystemExit(
+                    f"error: wrote {out_path} but contents do not match"
+                )
+    except OSError as exc:
+        raise SystemExit(f"error: cannot write entry to {out_path}: {exc}")
     print(f"wrote {len(text)} chars to {out_path}")
 
 
